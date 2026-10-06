@@ -22,6 +22,8 @@ def load() -> None:
             STATE = json.load(f)
     except FileNotFoundError:
         STATE = {"students": {}, "assessments": {}, "marks": []}
+    except json.JSONDecodeError:
+        raise SystemExit(f"Error: '{DATA}' contains invalid JSON.") from None
 
 
 def save() -> None:
@@ -213,8 +215,10 @@ def main() -> None:
     if len(sys.argv) > 1:
         try:
             port = int(sys.argv[1])
+            if not (1 <= port <= 65535):
+                raise ValueError
         except ValueError:
-            pass
+            raise SystemExit("Port must be an integer between 1 and 65535.") from None
 
     load()
     logging.info("gradebook on %d", port)
