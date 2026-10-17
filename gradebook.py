@@ -158,7 +158,7 @@ def add_mark(payload: Any) -> Dict[str, Any]:
     save()
     return {"ok": True}
 
-    def add_mark(
+def add_mark(
         state: dict[str, Any],
         mark: Mark,
         now: Callable[[], str],
