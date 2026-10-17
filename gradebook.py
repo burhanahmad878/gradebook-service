@@ -22,9 +22,6 @@ def load() -> None:
             STATE = json.load(f)
     except FileNotFoundError:
         STATE = {"students": {}, "assessments": {}, "marks": []}
-    except json.JSONDecodeError:
-        raise SystemExit(f"Error: '{DATA}' contains invalid JSON.") from None
-
 
 def save() -> None:
     """Save gradebook state to JSON file."""
@@ -69,6 +66,32 @@ def get_student(sid: str) -> Dict[str, Any]:
 def get_assessments() -> List[Dict[str, Any]]:
     """Return list of all assessments."""
     return list(STATE["assessments"].values())
+
+def pct(sid: str) -> str:
+    """Calculate and return the weighted percentage for a student."""
+    if sid not in STATE["students"]:
+        return "0"
+    
+    student_marks = [m for m in STATE["marks"] if m["student"] == sid]
+    if not student_marks:
+        return "0"
+
+    total_earned = 0.0
+    total_possible = 0.0
+    for m in student_marks:
+        aid = m["assessment"]
+        if aid in STATE["assessments"]:
+            a = STATE["assessments"][aid]
+            score = float(m["score"])
+            total = float(a["total"])
+            weight = float(a["weight"])
+            if total > 0:
+                total_earned += (score / total) * weight
+            total_possible += weight
+
+    if total_possible > 0:
+        return str(round(total_earned, 2))
+    return "0"
 
 
 def get_report() -> List[Dict[str, Any]]:
