@@ -8,6 +8,9 @@ from typing import Any, Dict, Tuple, List
 from errors import ConflictError, GradebookError, NotFoundError, ValidationError
 from models import parse_assessment, parse_mark, parse_student
 
+from typing import Any, Callable
+from models import Mark, parse_assessment, parse_mark, parse_student
+
 DATA = "gradebook.json"
 STATE: Dict[str, Any] = {"students": {}, "assessments": {}, "marks": []}
 
@@ -154,6 +157,30 @@ def add_mark(payload: Any) -> Dict[str, Any]:
     STATE["marks"].append(mark_data)
     save()
     return {"ok": True}
+
+    def add_mark(
+        state: dict[str, Any],
+        mark: Mark,
+        now: Callable[[], str],
+        save: Callable[[], None],
+    ) -> None:
+        """Check a mark against the gradebook, then record it and save."""
+        if mark.student not in state["students"]:
+            raise NotFoundError(f"no such student: {mark.student}")
+        assessment_row = state["assessments"].get(mark.assessment)
+        if assessment_row is None:
+            raise NotFoundError(f"no such assessment: {mark.assessment}")
+        if mark.score > assessment_row["total"]:
+            raise ValidationError("score exceeds assessment total")
+        state["marks"].append(
+            {
+                "student": mark.student,
+                "assessment": mark.assessment,
+                "score": mark.score,
+                "at": now(),
+            }
+        )
+        save()
 
 
 class Handler(http.server.BaseHTTPRequestHandler):
