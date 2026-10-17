@@ -1,19 +1,25 @@
-"""Unit tests for student percentage calculation (pct)."""
+"""Unit tests for student percentage calculation (pct) with parametrization."""
 
+import pytest
 import gradebook
 
 
-def test_student_with_no_marks_has_zero_percent(loaded: dict) -> None:
-    """A student with no marks should have a percentage of 0."""
+@pytest.mark.parametrize(
+    ("scores", "expected"),
+    [
+        pytest.param({}, "0", id="no-marks"),
+        pytest.param({"A1": 15}, "7.5", id="quiz-15-of-20"),
+        pytest.param({"A1": 20}, "10.0", id="quiz-full-marks"),
+        pytest.param({"A1": 0}, "0.0", id="quiz-zero-score"),
+        pytest.param({"A1": 15, "A2": 40}, "31.5", id="two-assessments"),
+    ],
+)
+def test_percentage_for_scores(loaded: dict, scores: dict, expected: str) -> None:
+    """Test various score combinations produce the expected weighted percentage."""
+    for assessment, score in scores.items():
+        loaded["marks"].append({"student": "S1", "assessment": assessment, "score": score})
     result = gradebook.pct("S1")
-    assert result == "0"
-
-
-def test_mark_of_15_out_of_20_on_weight_10_gives_7_5(loaded: dict) -> None:
-    """A mark of 15/20 on an assessment weighing 10 should give 7.5."""
-    loaded["marks"].append({"student": "S1", "assessment": "A1", "score": 15})
-    result = gradebook.pct("S1")
-    assert result == "7.5"
+    assert result == expected
 
 
 def test_mark_for_unknown_assessment_is_ignored(loaded: dict) -> None:

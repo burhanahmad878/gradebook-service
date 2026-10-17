@@ -78,6 +78,8 @@ def get_report() -> List[Dict[str, Any]]:
         st = get_student(sid)
         res.append({"id": st["id"], "name": st["name"], "pct": st.get("percentage", "0")})
     return res
+    
+    return "0"
 
 
 def add_student(payload: Any) -> Dict[str, Any]:
